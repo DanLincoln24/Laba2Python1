@@ -47,7 +47,7 @@ class ApiStubSource:
 
 def process_tasks(source: TaskSource) -> None:
     for task in source.get_tasks():
-        print(f"  → Задача {task.id}: {task.payload}")
+        print(f" Задача {task.id}: {task.payload}")
 
 def safe_process(source: object) -> None:
     if isinstance(source, TaskSource):
