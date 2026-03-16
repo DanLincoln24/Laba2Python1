@@ -73,3 +73,9 @@ if __name__ == "__main__":
     safe_process(random_source)
     safe_process(api_source)
     safe_process("not a source")
+
+#скрытый 7-ой тест
+    source = FileTaskSource("tasks.json")
+    for task in source.get_tasks():
+        print(f"ПРОВЕРКА СЧИТЫВАНИЯ ЗАДАЧ ИЗ JSON-ФАЙЛА tasks.json")
+        print(f"Задача {task.id}: {task.payload}")
