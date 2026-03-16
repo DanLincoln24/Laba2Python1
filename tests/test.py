@@ -78,6 +78,77 @@ class Tests(unittest.TestCase):
             except Exception:
                 self.fail(f"safe_process упал с {bad_source}")
 
+    def test_8_empty_json_file(self):
+        # Создаём пустой JSON-файл
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            f.write('[]')
+            filename = f.name
+
+        source = FileTaskSource(filename)
+        tasks = list(source.get_tasks())
+
+        assert len(tasks) == 0
+
+        os.unlink(filename)
+
+    def test_9_json_file_with_empty_strings(self):
+        # Создаём файл с пустыми строками
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            f.write('[{"id": 1, "payload": ""}]')
+            filename = f.name
+
+        source = FileTaskSource(filename)
+        tasks = list(source.get_tasks())
+
+        # Проверяем, что пустая строка сохраняется
+        assert len(tasks) == 1
+        assert tasks[0].id == 1
+        assert tasks[0].payload == ""
+
+        os.unlink(filename)
+
+    def test_10_json_file_missing_fields(self):
+        # Создаём файл без поля id
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            f.write('[{"payload": "no id"}]')
+            filename = f.name
+
+        # Проверяем, что возникает ошибка KeyError
+        source = FileTaskSource(filename)
+        try:
+            list(source.get_tasks())
+            assert False, "Должна была возникнуть ошибка KeyError"
+        except KeyError:
+            pass
+
+        os.unlink(filename)
+
+    def test_11_random_source_zero_count(self):
+        source = RandomTaskSource(0)
+        tasks = list(source.get_tasks())
+        assert len(tasks) == 0
+
+    def test_12_random_source_negative_count(self):
+        source = RandomTaskSource(-5)
+        tasks = list(source.get_tasks())
+        assert len(tasks) == 0  # range(-5) не даёт элементов
+
+    def test_13_api_source_empty_payload(self):
+        source = ApiStubSource("http://test.com")
+        tasks = list(source.get_tasks())
+
+        # Проверяем, что данные не пустые
+        assert len(tasks) == 2
+        assert tasks[0].payload != {}
+        assert tasks[1].payload != {}
+
+    def test_14_file_source_nonexistent_file(self):
+        source = FileTaskSource("nevergonnagivyouup.json")
+        try:
+            list(source.get_tasks())
+            assert False, "Должна была возникнуть ошибка FileNotFoundError"
+        except FileNotFoundError:
+            pass
 
 if __name__ == '__main__':
     unittest.main()
